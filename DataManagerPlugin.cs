@@ -10,7 +10,8 @@ namespace Silksong.DataManager;
 [Bep.BepInAutoPlugin(id: "org.silksong-modding.datamanager")]
 public partial class DataManagerPlugin : Bep.BaseUnityPlugin
 {
-    internal static DataManagerPlugin? Instance;
+    // This property will never be accessed before Start executes.
+    internal static DataManagerPlugin Instance { get; private set; } = null!;
 
     internal CG.List<(string GUID, IOnceSaveDataMod Mod)> onceSaveDataMods = new();
 
@@ -47,7 +48,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
     {
         private static void Postfix(int saveSlot)
         {
-            var mods = Instance!.onceSaveDataMods;
+            var mods = Instance.onceSaveDataMods;
 
             if (saveSlot == 0)
             {
@@ -70,7 +71,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
                     var ser = Json.JsonSerializer.CreateDefault(jsonSettings);
                     var obj = ser.Deserialize(reader, mod.OnceSaveDataType);
                     mod.UntypedOnceSaveData = obj;
-                    Instance!.Logger.LogInfo($"Loaded save data for mod {guid}, slot {saveSlot}");
+                    Instance.Logger.LogInfo($"Loaded save data for mod {guid}, slot {saveSlot}");
                 }
                 catch (IO.FileNotFoundException)
                 {
@@ -79,7 +80,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
                 catch (System.Exception err)
                 {
                     mod.UntypedOnceSaveData = null;
-                    Instance!.Logger.LogError(
+                    Instance.Logger.LogError(
                         $"Error loading save data for mod {guid}, slot {saveSlot}: {err}"
                     );
                 }
@@ -98,7 +99,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
                 return;
             }
 
-            var mods = Instance!.onceSaveDataMods;
+            var mods = Instance.onceSaveDataMods;
             var saveDir = DataPaths.OnceSaveDataDir(saveSlot);
 
             IO.Directory.CreateDirectory(saveDir);
@@ -118,11 +119,11 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
                     using var writer = new Json.JsonTextWriter(file);
                     var ser = Json.JsonSerializer.CreateDefault(jsonSettings);
                     ser.Serialize(writer, data);
-                    Instance!.Logger.LogInfo($"Saved save data for mod {guid}, slot {saveSlot}");
+                    Instance.Logger.LogInfo($"Saved save data for mod {guid}, slot {saveSlot}");
                 }
                 catch (System.Exception err)
                 {
-                    Instance!.Logger.LogError(
+                    Instance.Logger.LogError(
                         $"Error saving data for mod {guid}, slot {saveSlot}: {err}"
                     );
                 }
@@ -144,15 +145,15 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
             try
             {
                 IO.Directory.Delete(onceSaveDir, true);
-                Instance!.Logger.LogInfo($"Cleared modded data for slot {saveSlot}");
+                Instance.Logger.LogInfo($"Cleared modded data for slot {saveSlot}");
             }
             catch (IO.DirectoryNotFoundException)
             {
-                Instance!.Logger.LogInfo($"No modded data to clear for slot {saveSlot}");
+                Instance.Logger.LogInfo($"No modded data to clear for slot {saveSlot}");
             }
             catch (System.Exception err)
             {
-                Instance!.Logger.LogError($"Error clearing modded data for slot {saveSlot}: {err}");
+                Instance.Logger.LogError($"Error clearing modded data for slot {saveSlot}: {err}");
             }
         }
     }
