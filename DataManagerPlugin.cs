@@ -27,7 +27,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
                 onceSaveDataMods.Add((mod.Metadata.GUID, modInstance));
             }
         }
-        new HL.Harmony("org.silksong-modding.datamanager").PatchAll();
+        new HL.Harmony(Id).PatchAll();
     }
 
     private static Json.JsonSerializerSettings jsonSettings = new()
@@ -35,14 +35,6 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
         TypeNameHandling = Json.TypeNameHandling.Auto,
     };
 
-    private static string SaveDir(string subdir, int saveSlot)
-    {
-        // Other platforms are not relevant for modding.
-        var platform = (DesktopPlatform)Platform.Current;
-        return IO.Path.Combine(platform.saveDirPath, "Modded", subdir, saveSlot.ToString());
-    }
-
-    private const string OncePerSaveSubdir = "OncePerSave";
     private const string SyncedFilenameSuffix = ".json.dat";
 
     [HL.HarmonyPatch(
@@ -66,7 +58,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
                 return;
             }
 
-            var saveDir = SaveDir(OncePerSaveSubdir, saveSlot);
+            var saveDir = DataPaths.OnceSaveDataDir(saveSlot);
 
             foreach (var (guid, mod) in mods)
             {
@@ -107,7 +99,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
             }
 
             var mods = Instance!.onceSaveDataMods;
-            var saveDir = SaveDir(OncePerSaveSubdir, saveSlot);
+            var saveDir = DataPaths.OnceSaveDataDir(saveSlot);
 
             IO.Directory.CreateDirectory(saveDir);
 
@@ -148,7 +140,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
                 return;
             }
 
-            var onceSaveDir = SaveDir(OncePerSaveSubdir, saveSlot);
+            var onceSaveDir = DataPaths.OnceSaveDataDir(saveSlot);
             try
             {
                 IO.Directory.Delete(onceSaveDir, true);
