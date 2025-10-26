@@ -1,3 +1,4 @@
+using static System.Linq.Enumerable;
 using Bep = BepInEx;
 using CG = System.Collections.Generic;
 using HL = HarmonyLib;
@@ -13,7 +14,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
     // This property will never be accessed before Start executes.
     internal static DataManagerPlugin Instance { get; private set; } = null!;
 
-    internal CG.List<(string GUID, IOnceSaveDataMod Mod)> onceSaveDataMods = new();
+    internal CG.Dictionary<string, IOnceSaveDataMod> onceSaveDataMods = new();
 
     // We must use Start instead of Awake here - PluginInfos does not contain any mod instances
     // when Awake runs.
@@ -25,7 +26,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
             if (mod.Instance is IOnceSaveDataMod modInstance)
             {
                 Logger.LogInfo($"{mod.Metadata.GUID} uses once-save data");
-                onceSaveDataMods.Add((mod.Metadata.GUID, modInstance));
+                onceSaveDataMods.Add(mod.Metadata.GUID, modInstance);
             }
         }
         new HL.Harmony(Id).PatchAll();
@@ -155,6 +156,61 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
             {
                 Instance.Logger.LogError($"Error clearing modded data for slot {saveSlot}: {err}");
             }
+        }
+    }
+
+    [HL.HarmonyPatch(typeof(UE.UI.SaveSlotButton), nameof(UE.UI.SaveSlotButton.ProcessSaveStats))]
+    private static class ValidationHook
+    {
+        private static bool Prefix(
+            UE.UI.SaveSlotButton __instance,
+            ref bool __result,
+            bool doAnimate,
+            string errorInfo
+        )
+        {
+            var saveSlot = __instance.SaveSlotIndex;
+            var missingMods = Instance.MissingMods(saveSlot);
+            if (missingMods.Count == 0)
+            {
+                return true;
+            }
+            Instance.Logger.LogInfo($"save slot {saveSlot} has save data for missing mods:");
+            foreach (var m in missingMods)
+            {
+                Instance.Logger.LogInfo(m);
+            }
+            // to match the behavior of the original method
+            CheatManager.LastErrorText = errorInfo;
+            __instance.ChangeSaveFileState(
+                UE.UI.SaveSlotButton.SaveFileStates.Incompatible,
+                doAnimate
+            );
+            __result = true;
+            return false;
+        }
+    }
+
+    private CG.List<string> MissingMods(int saveSlot)
+    {
+        var onceSaveDir = DataPaths.OnceSaveDataDir(saveSlot);
+        try
+        {
+            // The ?* instead of just * is to work around a quirk of EnumerateFiles;
+            // see https://learn.microsoft.com/en-us/dotnet/api/system.io.directory.enumeratefiles?view=netstandard-2.1#system-io-directory-enumeratefiles(system-string-system-string)
+            return IO
+                .Directory.EnumerateFiles(onceSaveDir, "?*" + SyncedFilenameSuffix)
+                .Select(path =>
+                {
+                    var name = IO.Path.GetFileName(path);
+                    return name.Substring(0, name.Length - SyncedFilenameSuffix.Length);
+                })
+                .Where(modGUID => !onceSaveDataMods.ContainsKey(modGUID))
+                .ToList();
+        }
+        catch (IO.DirectoryNotFoundException)
+        {
+            return new();
         }
     }
 }
