@@ -210,7 +210,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
         }
         catch (IO.DirectoryNotFoundException)
         {
-            return new();
+            return [];
         }
     }
 }
