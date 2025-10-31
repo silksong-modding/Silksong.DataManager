@@ -9,7 +9,9 @@ internal static class Utils
 {
     private static readonly NJson.JsonSerializerSettings _settings = new()
     {
+        ContractResolver = ShouldSerializeContractResolver.Instance,
         TypeNameHandling = NJson.TypeNameHandling.Auto,
+        ObjectCreationHandling = NJson.ObjectCreationHandling.Replace,
     };
 
     internal static object? Deserialize(string path, System.Type type)
