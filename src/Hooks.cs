@@ -15,44 +15,23 @@ internal static class OnceLoadHook
 {
     private static void Postfix(int saveSlot)
     {
-        var mods = DataManagerPlugin.Instance.onceSaveDataMods;
+        var mods = DataManagerPlugin.Instance.ManagedMods;
 
         if (saveSlot == 0)
         {
-            foreach (var (_, mod) in mods)
+            foreach (var mod in mods)
             {
-                mod.UntypedOnceSaveData = null;
+                if (mod.OnceSaveData is { } onceSaveData)
+                {
+                    onceSaveData.UntypedOnceSaveData = null;
+                }
             }
             return;
         }
 
-        var saveDir = DataPaths.OnceSaveDataDir(saveSlot);
-
-        foreach (var (guid, mod) in mods)
+        foreach (var mod in mods)
         {
-            var saveFileName = IO.Path.Combine(
-                saveDir,
-                guid + DataManagerPlugin.SyncedFilenameSuffix
-            );
-            try
-            {
-                var obj = Json.Utils.Deserialize(saveFileName, mod.OnceSaveDataType);
-                mod.UntypedOnceSaveData = obj;
-                DataManagerPlugin.InstanceLogger.LogInfo(
-                    $"Loaded save data for mod {guid}, slot {saveSlot}"
-                );
-            }
-            catch (IO.FileNotFoundException)
-            {
-                mod.UntypedOnceSaveData = null;
-            }
-            catch (System.Exception err)
-            {
-                mod.UntypedOnceSaveData = null;
-                DataManagerPlugin.InstanceLogger.LogError(
-                    $"Error loading save data for mod {guid}, slot {saveSlot}: {err}"
-                );
-            }
+            mod.LoadOnceSaveData(saveSlot);
         }
     }
 }
@@ -68,9 +47,8 @@ internal static class OnceSetupHook
             return;
         }
 
-        var mods = DataManagerPlugin.Instance.onceSaveDataMods;
+        var mods = DataManagerPlugin.Instance.ManagedMods;
         var saveDir = DataPaths.OnceSaveDataDir(saveSlot);
-
         // Clear any existing modded data for this slot.
         // This can happen if a savefile is started with a mod active, and then the
         // game is closed before first saving that savefile.
@@ -80,31 +58,9 @@ internal static class OnceSetupHook
         DataManagerPlugin.ClearModdedData(saveSlot);
         IO.Directory.CreateDirectory(saveDir);
 
-        foreach (var (guid, mod) in mods)
+        foreach (var mod in mods)
         {
-            var data = mod.UntypedOnceSaveData;
-            if (data == null)
-            {
-                continue;
-            }
-
-            var saveFileName = IO.Path.Combine(
-                saveDir,
-                guid + DataManagerPlugin.SyncedFilenameSuffix
-            );
-            try
-            {
-                Json.Utils.Serialize(saveFileName, data);
-                DataManagerPlugin.InstanceLogger.LogInfo(
-                    $"Saved save data for mod {guid}, slot {saveSlot}"
-                );
-            }
-            catch (System.Exception err)
-            {
-                DataManagerPlugin.InstanceLogger.LogError(
-                    $"Error saving data for mod {guid}, slot {saveSlot}: {err}"
-                );
-            }
+            mod.SaveOnceSaveData(saveSlot);
         }
     }
 }

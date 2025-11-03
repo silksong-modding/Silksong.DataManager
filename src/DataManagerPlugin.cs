@@ -12,12 +12,11 @@ namespace Silksong.DataManager;
 [Bep.BepInDependency("org.silksong-modding.i18n")]
 public partial class DataManagerPlugin : Bep.BaseUnityPlugin
 {
-    // This property will never be accessed before Start executes.
+    // These properties will never be accessed before Start executes.
     internal static DataManagerPlugin Instance { get; private set; } = null!;
-
     internal static Bep.Logging.ManualLogSource InstanceLogger => Instance.Logger;
 
-    internal CG.Dictionary<string, IOnceSaveDataMod> onceSaveDataMods = new();
+    internal CG.List<ManagedMod> ManagedMods = [];
 
     private void Awake()
     {
@@ -31,17 +30,19 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
     // any mod instances when Awake runs.
     private void Start()
     {
-        foreach (var (_, mod) in Bep.Bootstrap.Chainloader.PluginInfos)
+        foreach (var (guid, info) in Bep.Bootstrap.Chainloader.PluginInfos)
         {
-            if (mod.Instance is IOnceSaveDataMod modInstance)
-            {
-                Logger.LogInfo($"{mod.Metadata.GUID} uses once-save data");
-                onceSaveDataMods.Add(mod.Metadata.GUID, modInstance);
-            }
+            if (
+                info?.Instance is not { } plugin
+                || !ManagedMod.TryCreate(plugin, out var managedMod)
+            )
+                continue;
+
+            ManagedMods.Add(managedMod);
         }
     }
 
-    internal const string SyncedFilenameSuffix = ".json.dat";
+    private const string SyncedFilenameSuffix = ".json.dat";
 
     internal static void ClearModdedData(int saveSlot)
     {
@@ -92,7 +93,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
                     var name = IO.Path.GetFileName(path);
                     return name.Substring(0, name.Length - SyncedFilenameSuffix.Length);
                 })
-                .Where(modGUID => !onceSaveDataMods.ContainsKey(modGUID))
+                .Where(modGUID => !Bep.Bootstrap.Chainloader.PluginInfos.ContainsKey(modGUID))
                 .ToList();
         }
         catch (IO.DirectoryNotFoundException)
