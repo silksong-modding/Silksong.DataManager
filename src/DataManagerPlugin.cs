@@ -18,11 +18,18 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
 
     internal CG.Dictionary<string, IOnceSaveDataMod> onceSaveDataMods = new();
 
-    // We must use Start instead of Awake here - PluginInfos does not contain any mod instances
-    // when Awake runs.
-    private void Start()
+    private void Awake()
     {
         Instance = this;
+        new HL.Harmony(Id).PatchAll();
+
+        Logger.LogInfo("Mod Loaded");
+    }
+
+    // We must use Start instead of Awake here - PluginInfos does not contain
+    // any mod instances when Awake runs.
+    private void Start()
+    {
         foreach (var (_, mod) in Bep.Bootstrap.Chainloader.PluginInfos)
         {
             if (mod.Instance is IOnceSaveDataMod modInstance)
@@ -31,7 +38,6 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
                 onceSaveDataMods.Add(mod.Metadata.GUID, modInstance);
             }
         }
-        new HL.Harmony(Id).PatchAll();
     }
 
     private static Json.JsonSerializerSettings jsonSettings = new()
