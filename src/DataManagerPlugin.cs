@@ -3,7 +3,6 @@ using Bep = BepInEx;
 using CG = System.Collections.Generic;
 using HL = HarmonyLib;
 using IO = System.IO;
-using Json = Newtonsoft.Json;
 using TC = TeamCherry;
 using UE = UnityEngine;
 
@@ -41,11 +40,6 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
             }
         }
     }
-
-    internal static Json.JsonSerializerSettings jsonSettings = new()
-    {
-        TypeNameHandling = Json.TypeNameHandling.Auto,
-    };
 
     internal const string SyncedFilenameSuffix = ".json.dat";
 

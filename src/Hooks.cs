@@ -1,6 +1,5 @@
 using HL = HarmonyLib;
 using IO = System.IO;
-using Json = Newtonsoft.Json;
 using TC = TeamCherry;
 using UE = UnityEngine;
 
@@ -37,10 +36,7 @@ internal static class OnceLoadHook
             );
             try
             {
-                using var file = IO.File.OpenText(saveFileName);
-                using var reader = new Json.JsonTextReader(file);
-                var ser = Json.JsonSerializer.CreateDefault(DataManagerPlugin.jsonSettings);
-                var obj = ser.Deserialize(reader, mod.OnceSaveDataType);
+                var obj = Json.Utils.Deserialize(saveFileName, mod.OnceSaveDataType);
                 mod.UntypedOnceSaveData = obj;
                 DataManagerPlugin.InstanceLogger.LogInfo(
                     $"Loaded save data for mod {guid}, slot {saveSlot}"
@@ -98,10 +94,7 @@ internal static class OnceSetupHook
             );
             try
             {
-                using var file = IO.File.CreateText(saveFileName);
-                using var writer = new Json.JsonTextWriter(file);
-                var ser = Json.JsonSerializer.CreateDefault(DataManagerPlugin.jsonSettings);
-                ser.Serialize(writer, data);
+                Json.Utils.Serialize(saveFileName, data);
                 DataManagerPlugin.InstanceLogger.LogInfo(
                     $"Saved save data for mod {guid}, slot {saveSlot}"
                 );
