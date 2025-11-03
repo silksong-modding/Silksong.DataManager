@@ -103,6 +103,13 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
             var mods = Instance.onceSaveDataMods;
             var saveDir = DataPaths.OnceSaveDataDir(saveSlot);
 
+            // Clear any existing modded data for this slot.
+            // This can happen if a savefile is started with a mod active, and then the
+            // game is closed before first saving that savefile.
+            // Without clearing that data, it would be erroneously applied to the new savefile,
+            // potentially even rendering it (spuriously) incompatible if said mod was uninstalled
+            // in the meantime.
+            ClearModdedData(saveSlot);
             IO.Directory.CreateDirectory(saveDir);
 
             foreach (var (guid, mod) in mods)
@@ -137,25 +144,28 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
     {
         private static void Postfix(int saveSlot)
         {
-            if (saveSlot == 0)
+            if (saveSlot != 0)
             {
-                return;
+                ClearModdedData(saveSlot);
             }
+        }
+    }
 
-            var onceSaveDir = DataPaths.OnceSaveDataDir(saveSlot);
-            try
-            {
-                IO.Directory.Delete(onceSaveDir, true);
-                Instance.Logger.LogInfo($"Cleared modded data for slot {saveSlot}");
-            }
-            catch (IO.DirectoryNotFoundException)
-            {
-                Instance.Logger.LogInfo($"No modded data to clear for slot {saveSlot}");
-            }
-            catch (System.Exception err)
-            {
-                Instance.Logger.LogError($"Error clearing modded data for slot {saveSlot}: {err}");
-            }
+    private static void ClearModdedData(int saveSlot)
+    {
+        var onceSaveDir = DataPaths.OnceSaveDataDir(saveSlot);
+        try
+        {
+            IO.Directory.Delete(onceSaveDir, true);
+            Instance.Logger.LogInfo($"Cleared modded data for slot {saveSlot}");
+        }
+        catch (IO.DirectoryNotFoundException)
+        {
+            Instance.Logger.LogInfo($"No modded data to clear for slot {saveSlot}");
+        }
+        catch (System.Exception err)
+        {
+            Instance.Logger.LogError($"Error clearing modded data for slot {saveSlot}: {err}");
         }
     }
 
