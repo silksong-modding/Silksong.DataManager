@@ -4,11 +4,13 @@ using CG = System.Collections.Generic;
 using HL = HarmonyLib;
 using IO = System.IO;
 using Json = Newtonsoft.Json;
+using TC = TeamCherry;
 using UE = UnityEngine;
 
 namespace Silksong.DataManager;
 
 [Bep.BepInAutoPlugin(id: "org.silksong-modding.datamanager")]
+[Bep.BepInDependency("org.silksong-modding.i18n")]
 public partial class DataManagerPlugin : Bep.BaseUnityPlugin
 {
     // This property will never be accessed before Start executes.
@@ -172,6 +174,8 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
     [HL.HarmonyPatch(typeof(UE.UI.SaveSlotButton), nameof(UE.UI.SaveSlotButton.ProcessSaveStats))]
     private static class ValidationHook
     {
+        private static TC.Localization.LocalisedString? vanillaSaveIncompatibleText;
+
         private static bool Prefix(
             UE.UI.SaveSlotButton __instance,
             ref bool __result,
@@ -183,6 +187,12 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
             var missingMods = Instance.MissingMods(saveSlot);
             if (missingMods.Count == 0)
             {
+                if (vanillaSaveIncompatibleText is { } text)
+                {
+                    SetSaveIncompatibleText(__instance, text);
+                    // Since the vanilla text is restored, we don't need to do this again.
+                    vanillaSaveIncompatibleText = null;
+                }
                 return true;
             }
             Instance.Logger.LogInfo($"save slot {saveSlot} has save data for missing mods:");
@@ -190,6 +200,10 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
             {
                 Instance.Logger.LogInfo(m);
             }
+            vanillaSaveIncompatibleText = SetSaveIncompatibleText(
+                __instance,
+                new($"Mods.{DataManagerPlugin.Id}", "REQUIRED_MODS_MISSING")
+            );
             // to match the behavior of the original method
             CheatManager.LastErrorText = errorInfo;
             __instance.ChangeSaveFileState(
@@ -199,6 +213,19 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
             __result = true;
             return false;
         }
+    }
+
+    private static TC.Localization.LocalisedString SetSaveIncompatibleText(
+        UE.UI.SaveSlotButton button,
+        TC.Localization.LocalisedString s
+    )
+    {
+        var smallDescLocalizer = button
+            .saveIncompatibleText.gameObject.transform.Find("Small Desc")
+            .gameObject.GetComponent<AutoLocalizeTextUI>();
+        var oldText = smallDescLocalizer.Text;
+        smallDescLocalizer.Text = s;
+        return oldText;
     }
 
     private CG.List<string> MissingMods(int saveSlot)
