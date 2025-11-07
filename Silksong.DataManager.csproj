@@ -49,14 +49,14 @@
     <ItemGroup>
       <Binaries Include="$(TargetPath)" />
       <Binaries Include="$(TargetDir)/$(TargetName).pdb" />
-      <Binaries Include="languages/*.json" PackDir="languages" />
+      <Binaries Include="languages/*.json" LocalDir="languages" PackDir="plugins/languages" />
     </ItemGroup>
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)/thunderstore</ThunderstoreDir>
     </PropertyGroup>
     <Copy
       SourceFiles="@(Binaries)"
-      DestinationFolder="$(SilksongFolder)/BepInEx/plugins/$(TargetName)/%(Binaries.PackDir)"
+      DestinationFolder="$(SilksongFolder)/BepInEx/plugins/$(TargetName)/%(Binaries.LocalDir)"
       Condition="'$(SilksongFolder)' != '' And Exists('$(SilksongFolder)')"
     />
     <RemoveDir Directories="$(ThunderstoreDir)/tmp;$(ThunderstoreDir)/dist" />
