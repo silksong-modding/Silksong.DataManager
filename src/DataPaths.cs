@@ -11,7 +11,7 @@ public static class DataPaths
     {
         // Other platforms are not relevant for modding.
         var platform = (DesktopPlatform)Platform.Current;
-        return IO.Path.Combine(platform.saveDirPath, ModdedSubdir, subdir, saveSlot.ToString());
+        return IO.Path.Combine(platform.saveDirPath, ModdedSubdir, $"user{saveSlot}", subdir);
     }
 
     public static string OnceSaveDataDir(int saveSlot) => SaveDir(OncePerSaveSubdir, saveSlot);
