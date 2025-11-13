@@ -3,7 +3,6 @@ namespace Silksong.DataManager;
 /// Interface for mods that need to store some save data at the start of each new game,
 /// but don't need to change it afterwards.
 public interface IOnceSaveDataMod<T> : IOnceSaveDataMod
-    where T : class
 {
     /// The once-save data for the current file.
     /// DataManager reads and stores its value once at the start of each new game,
@@ -19,7 +18,7 @@ public interface IOnceSaveDataMod<T> : IOnceSaveDataMod
     object? IOnceSaveDataMod.UntypedOnceSaveData
     {
         get => OnceSaveData;
-        set => OnceSaveData = value == null ? null : (T)value;
+        set => OnceSaveData = value == null ? default : (T)value;
     }
 }
 

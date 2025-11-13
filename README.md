@@ -32,9 +32,6 @@ public partial class StartCrestSelectorPlugin : BaseUnityPlugin, IOnceSaveDataMo
 }
 ```
 
-Note that the stored type (`SaveData` in this case) must be a reference type; using a value type, such
-as a struct, will result in a compile-time error.
-
 When the player starts a new game - specifically at the end of GameManager.StartNewGame - DataManager
 will read the value of the OnceSaveData property, and if non-null, serialize it in the game's saves
 directory, under `Modded/OncePerSave/N/GUID.json.dat`, where N is the save slot's number and GUID the
