@@ -10,7 +10,9 @@ namespace Silksong.DataManager;
 
 [Bep.BepInAutoPlugin(id: "org.silksong-modding.datamanager")]
 [Bep.BepInDependency("org.silksong-modding.i18n")]
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 public partial class DataManagerPlugin : Bep.BaseUnityPlugin
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
     // These properties will never be accessed before Start executes.
     internal static DataManagerPlugin Instance { get; private set; } = null!;
