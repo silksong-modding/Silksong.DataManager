@@ -5,11 +5,10 @@ namespace Silksong.DataManager.Json;
 
 // TODO(UserIsntAvailable): Make `public`?
 
-internal static class Utils
+internal static class JsonUtil
 {
     private static readonly NJson.JsonSerializerSettings _settings = new()
     {
-        ContractResolver = ShouldSerializeContractResolver.Instance,
         TypeNameHandling = NJson.TypeNameHandling.Auto,
         ObjectCreationHandling = NJson.ObjectCreationHandling.Replace,
     };
