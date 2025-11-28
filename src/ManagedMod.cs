@@ -35,7 +35,7 @@ internal record ManagedMod(string Guid, IOnceSaveDataMod? OnceSaveData)
         var saveFileName = OnceSaveDataPath(saveSlot);
         try
         {
-            var obj = Json.Utils.Deserialize(saveFileName, OnceSaveData.OnceSaveDataType);
+            var obj = Json.JsonUtil.Deserialize(saveFileName, OnceSaveData.OnceSaveDataType);
             OnceSaveData.UntypedOnceSaveData = obj;
             DataManagerPlugin.InstanceLogger.LogInfo(
                 $"Loaded save data for mod {Guid}, slot {saveSlot}"
@@ -64,7 +64,7 @@ internal record ManagedMod(string Guid, IOnceSaveDataMod? OnceSaveData)
         var saveFileName = OnceSaveDataPath(saveSlot);
         try
         {
-            Json.Utils.Serialize(saveFileName, data);
+            Json.JsonUtil.Serialize(saveFileName, data);
             DataManagerPlugin.InstanceLogger.LogInfo(
                 $"Saved save data for mod {Guid}, slot {saveSlot}"
             );
