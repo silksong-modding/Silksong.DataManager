@@ -5,13 +5,29 @@ using UE = UnityEngine;
 
 namespace Silksong.DataManager;
 
+[HL.HarmonyPatch(typeof(GameManager), nameof(GameManager.OnApplicationQuit))]
+internal static class OnQuitGameHook
+{
+    private static void Postfix()
+    {
+        IO.Directory.CreateDirectory(DataPaths.ProfileDataDir);
+        IO.Directory.CreateDirectory(DataPaths.GlobalDataDir);
+
+        foreach (var modSettings in DataManagerPlugin.Instance.ManagedMods)
+        {
+            modSettings.SaveProfileData();
+            modSettings.SaveGlobalData();
+        }
+    }
+}
+
 [HL.HarmonyPatch(
     typeof(GameManager),
     nameof(GameManager.SetLoadedGameData),
     typeof(SaveGameData),
     typeof(int)
 )]
-internal static class OnceLoadHook
+internal static class SaveDataLoadHook
 {
     private static void Postfix(int saveSlot)
     {
@@ -21,6 +37,10 @@ internal static class OnceLoadHook
         {
             foreach (var mod in mods)
             {
+                if (mod.SaveData is { } saveData)
+                {
+                    saveData.UntypedSaveData = null;
+                }
                 if (mod.OnceSaveData is { } onceSaveData)
                 {
                     onceSaveData.UntypedOnceSaveData = null;
@@ -31,8 +51,45 @@ internal static class OnceLoadHook
 
         foreach (var mod in mods)
         {
+            mod.LoadSaveData(saveSlot);
             mod.LoadOnceSaveData(saveSlot);
         }
+    }
+}
+
+[HL.HarmonyPatch(
+    typeof(GameManager),
+    nameof(GameManager.SaveGame),
+    [typeof(int), typeof(System.Action<bool>), typeof(bool), typeof(AutoSaveName)]
+)]
+internal static class SaveDataSaveHook
+{
+    private static void Prefix(int saveSlot, ref System.Action<bool> ogCallback)
+    {
+        if (saveSlot == 0)
+        {
+            return;
+        }
+
+        var ogCallbackCopy = ogCallback;
+        ogCallback = (didSave) =>
+        {
+            ogCallbackCopy?.Invoke(didSave);
+
+            if (!didSave)
+            {
+                return;
+            }
+
+            IO.Directory.CreateDirectory(DataPaths.SaveDataDir(saveSlot));
+
+            foreach (var modSettings in DataManagerPlugin.Instance.ManagedMods)
+            {
+                modSettings.SaveSaveData(saveSlot);
+            }
+
+            // TODO(UserIsntAvailable): Handle "Restore_Points"
+        };
     }
 }
 
@@ -55,7 +112,7 @@ internal static class OnceSetupHook
         // Without clearing that data, it would be erroneously applied to the new savefile,
         // potentially even rendering it (spuriously) incompatible if said mod was uninstalled
         // in the meantime.
-        DataManagerPlugin.ClearModdedData(saveSlot);
+        DataManagerPlugin.ClearModdedSaveData(saveSlot);
         IO.Directory.CreateDirectory(saveDir);
 
         foreach (var mod in mods)
@@ -66,13 +123,13 @@ internal static class OnceSetupHook
 }
 
 [HL.HarmonyPatch(typeof(GameManager), nameof(GameManager.ClearSaveFile))]
-internal static class ClearHook
+internal static class SaveDataClearHook
 {
     private static void Postfix(int saveSlot)
     {
         if (saveSlot != 0)
         {
-            DataManagerPlugin.ClearModdedData(saveSlot);
+            DataManagerPlugin.ClearModdedSaveData(saveSlot);
         }
     }
 }

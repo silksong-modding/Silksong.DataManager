@@ -1,24 +1,37 @@
-namespace Silksong.DataManager;
-
 using IO = System.IO;
+
+namespace Silksong.DataManager;
 
 /// <summary>
 /// Static class exposing paths to files and folders used by DataManager.
 /// </summary>
 public static class DataPaths
 {
-    private const string ModdedSubdir = "Modded";
-    private const string OncePerSaveSubdir = "OncePerSave";
-
-    private static string SaveDir(string subdir, int saveSlot)
+    private static string ModdedDir(string subdir)
     {
         // Other platforms are not relevant for modding.
         var platform = (DesktopPlatform)Platform.Current;
-        return IO.Path.Combine(platform.saveDirPath, ModdedSubdir, $"user{saveSlot}", subdir);
+        return IO.Path.Combine(platform.saveDirPath, "Modded", subdir);
     }
+
+    /// <summary>
+    /// The directory containing data for <see cref="IProfileDataMod{T}"/> mods.
+    /// </summary>
+    public static string ProfileDataDir => BepInEx.Paths.ConfigPath;
+
+    /// <summary>
+    /// The directory containing data for <see cref="IGlobalDataMod{T}"/> mods.
+    /// </summary>
+    public static string GlobalDataDir => ModdedDir("Global");
+
+    /// <summary>
+    /// The directory containing data for <see cref="ISaveDataMod{T}"/> mods.
+    /// </summary>
+    public static string SaveDataDir(int saveSlot) => ModdedDir($"user{saveSlot}");
 
     /// <summary>
     /// The directory containing data for <see cref="IOnceSaveDataMod{T}"/> mods.
     /// </summary>
-    public static string OnceSaveDataDir(int saveSlot) => SaveDir(OncePerSaveSubdir, saveSlot);
+    public static string OnceSaveDataDir(int saveSlot) =>
+        IO.Path.Combine(SaveDataDir(saveSlot), "OncePerSave");
 }
