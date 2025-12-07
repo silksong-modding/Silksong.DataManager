@@ -11,7 +11,8 @@ public interface IOnceSaveDataMod<T> : IOnceSaveDataMod
     /// If this property is null at that time, no data are written for that file for the client mod.
     /// Upon loading any existing file, this property is set to the saved data for that file
     /// for the client mod, if any exists.
-    /// If no such data exists, or the game is at the title screen, this property is set to null.
+    /// If there are errors while loading the data (eg. no such data exists), or the game is at the
+    /// title screen, this property is set to null.
     T? OnceSaveData { get; set; }
 
     System.Type IOnceSaveDataMod.OnceSaveDataType => typeof(T);
@@ -24,7 +25,7 @@ public interface IOnceSaveDataMod<T> : IOnceSaveDataMod
 }
 
 /// An implementation detail that must be made public due to accessibility rules.
-/// Client mods should instead implement <see cref="IOnceSaveDataMod{T}">.
+/// Client mods should instead implement <see cref="IOnceSaveDataMod{T}"/>.
 public interface IOnceSaveDataMod
 {
     /// The target type to use when deserializing save data for this mod.
