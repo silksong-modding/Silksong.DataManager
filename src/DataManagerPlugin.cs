@@ -40,30 +40,32 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
             )
                 continue;
 
+            managedMod.LoadProfileData();
+            managedMod.LoadGlobalData();
             ManagedMods.Add(managedMod);
         }
     }
 
-    private const string SyncedFilenameSuffix = ".json.dat";
-
-    internal static void ClearModdedData(int saveSlot)
+    internal static void ClearModdedSaveData(int saveSlot)
     {
-        var onceSaveDir = DataPaths.OnceSaveDataDir(saveSlot);
+        var saveDir = DataPaths.SaveDataDir(saveSlot);
         try
         {
-            IO.Directory.Delete(onceSaveDir, true);
-            DataManagerPlugin.InstanceLogger.LogInfo($"Cleared modded data for slot {saveSlot}");
+            IO.Directory.Delete(saveDir, true);
+            DataManagerPlugin.InstanceLogger.LogInfo(
+                $"Cleared modded save data for slot {saveSlot}"
+            );
         }
         catch (IO.DirectoryNotFoundException)
         {
             DataManagerPlugin.InstanceLogger.LogInfo(
-                $"No modded data to clear for slot {saveSlot}"
+                $"No modded save data to clear for slot {saveSlot}"
             );
         }
         catch (System.Exception err)
         {
             DataManagerPlugin.InstanceLogger.LogError(
-                $"Error clearing modded data for slot {saveSlot}: {err}"
+                $"Error clearing modded save data for slot {saveSlot}: {err}"
             );
         }
     }
@@ -83,17 +85,22 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
 
     internal CG.List<string> MissingMods(int saveSlot)
     {
-        var onceSaveDir = DataPaths.OnceSaveDataDir(saveSlot);
+        var syncedFilenameSuffix = ".json.dat";
+        var saveDir = DataPaths.SaveDataDir(saveSlot);
         try
         {
             // The ?* instead of just * is to work around a quirk of EnumerateFiles;
             // see https://learn.microsoft.com/en-us/dotnet/api/system.io.directory.enumeratefiles?view=netstandard-2.1#system-io-directory-enumeratefiles(system-string-system-string)
             return IO
-                .Directory.EnumerateFiles(onceSaveDir, "?*" + SyncedFilenameSuffix)
+                .Directory.EnumerateFiles(
+                    saveDir,
+                    "?*" + syncedFilenameSuffix,
+                    IO.SearchOption.AllDirectories
+                )
                 .Select(path =>
                 {
                     var name = IO.Path.GetFileName(path);
-                    return name.Substring(0, name.Length - SyncedFilenameSuffix.Length);
+                    return name.Substring(0, name.Length - syncedFilenameSuffix.Length);
                 })
                 .Where(modGUID => !Bep.Bootstrap.Chainloader.PluginInfos.ContainsKey(modGUID))
                 .ToList();
