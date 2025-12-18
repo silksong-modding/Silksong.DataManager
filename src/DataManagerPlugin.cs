@@ -46,26 +46,27 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
         }
     }
 
-    internal static void ClearModdedSaveData(int saveSlot)
+    internal static void ClearModdedSaveSlot(int saveSlot)
     {
-        var saveDir = DataPaths.SaveDataDir(saveSlot);
+        var saveDir = DataPaths.SaveSlotDir(saveSlot);
+
         try
         {
             IO.Directory.Delete(saveDir, true);
             DataManagerPlugin.InstanceLogger.LogInfo(
-                $"Cleared modded save data for slot {saveSlot}"
+                $"Cleared modded save slot for slot {saveSlot}"
             );
         }
         catch (IO.DirectoryNotFoundException)
         {
             DataManagerPlugin.InstanceLogger.LogInfo(
-                $"No modded save data to clear for slot {saveSlot}"
+                $"No modded save slot to clear for slot {saveSlot}"
             );
         }
         catch (System.Exception err)
         {
             DataManagerPlugin.InstanceLogger.LogError(
-                $"Error clearing modded save data for slot {saveSlot}: {err}"
+                $"Error clearing modded save slot for slot {saveSlot}: {err}"
             );
         }
     }
@@ -86,7 +87,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
     internal CG.List<string> MissingMods(int saveSlot)
     {
         var syncedFilenameSuffix = ".json.dat";
-        var saveDir = DataPaths.SaveDataDir(saveSlot);
+        var saveDir = DataPaths.SaveSlotDir(saveSlot);
         try
         {
             // The ?* instead of just * is to work around a quirk of EnumerateFiles;

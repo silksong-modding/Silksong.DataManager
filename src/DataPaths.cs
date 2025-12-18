@@ -14,6 +14,8 @@ public static class DataPaths
         return IO.Path.Combine(platform.saveDirPath, "Modded", subdir);
     }
 
+    internal static string SaveSlotDir(int saveSlot) => ModdedDir($"user{saveSlot}");
+
     /// <summary>
     /// The directory containing data for <see cref="IProfileDataMod{T}"/> mods.
     /// </summary>
@@ -27,11 +29,12 @@ public static class DataPaths
     /// <summary>
     /// The directory containing data for <see cref="ISaveDataMod{T}"/> mods.
     /// </summary>
-    public static string SaveDataDir(int saveSlot) => ModdedDir($"user{saveSlot}");
+    public static string SaveDataDir(int saveSlot) =>
+        IO.Path.Combine(SaveSlotDir(saveSlot), "SaveData");
 
     /// <summary>
     /// The directory containing data for <see cref="IOnceSaveDataMod{T}"/> mods.
     /// </summary>
     public static string OnceSaveDataDir(int saveSlot) =>
-        IO.Path.Combine(SaveDataDir(saveSlot), "OncePerSave");
+        IO.Path.Combine(SaveSlotDir(saveSlot), "OncePerSave");
 }

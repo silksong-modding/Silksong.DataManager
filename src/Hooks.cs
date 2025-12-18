@@ -13,10 +13,10 @@ internal static class OnQuitGameHook
         IO.Directory.CreateDirectory(DataPaths.ProfileDataDir);
         IO.Directory.CreateDirectory(DataPaths.GlobalDataDir);
 
-        foreach (var modSettings in DataManagerPlugin.Instance.ManagedMods)
+        foreach (var mod in DataManagerPlugin.Instance.ManagedMods)
         {
-            modSettings.SaveProfileData();
-            modSettings.SaveGlobalData();
+            mod.SaveProfileData();
+            mod.SaveGlobalData();
         }
     }
 }
@@ -83,9 +83,9 @@ internal static class SaveDataSaveHook
 
             IO.Directory.CreateDirectory(DataPaths.SaveDataDir(saveSlot));
 
-            foreach (var modSettings in DataManagerPlugin.Instance.ManagedMods)
+            foreach (var mod in DataManagerPlugin.Instance.ManagedMods)
             {
-                modSettings.SaveSaveData(saveSlot);
+                mod.SaveSaveData(saveSlot);
             }
 
             // TODO(UserIsntAvailable): Handle "Restore_Points"
@@ -112,7 +112,7 @@ internal static class OnceSetupHook
         // Without clearing that data, it would be erroneously applied to the new savefile,
         // potentially even rendering it (spuriously) incompatible if said mod was uninstalled
         // in the meantime.
-        DataManagerPlugin.ClearModdedSaveData(saveSlot);
+        DataManagerPlugin.ClearModdedSaveSlot(saveSlot);
         IO.Directory.CreateDirectory(saveDir);
 
         foreach (var mod in mods)
@@ -129,7 +129,7 @@ internal static class SaveDataClearHook
     {
         if (saveSlot != 0)
         {
-            DataManagerPlugin.ClearModdedSaveData(saveSlot);
+            DataManagerPlugin.ClearModdedSaveSlot(saveSlot);
         }
     }
 }
