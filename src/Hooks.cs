@@ -176,3 +176,29 @@ internal static class ValidationHook
         return false;
     }
 }
+
+[HL.HarmonyPatch(typeof(UE.UI.SaveSlotButton), nameof(UE.UI.SaveSlotButton.OverrideSaveData))]
+internal static class OverrideSaveDataHook
+{
+    private static void Postfix(UE.UI.SaveSlotButton __instance)
+    {
+        if (__instance.State != UE.UI.SaveSlotButton.SlotState.RestoreSave)
+        {
+            return;
+        }
+
+        var saveSlot = __instance.SaveSlotIndex;
+        var saveDir = DataPaths.SaveDataDir(saveSlot);
+
+        try
+        {
+            IO.Directory.Delete(saveDir, true);
+        }
+        catch (System.Exception err)
+        {
+            DataManagerPlugin.InstanceLogger.LogError(
+                $"Error overring save data for slot {saveSlot}: {err}"
+            );
+        }
+    }
+}
