@@ -51,8 +51,8 @@ internal static class SaveDataLoadHook
 
         foreach (var mod in mods)
         {
-            mod.LoadSaveData(saveSlot);
             mod.LoadOnceSaveData(saveSlot);
+            mod.LoadSaveData(saveSlot);
         }
     }
 }
