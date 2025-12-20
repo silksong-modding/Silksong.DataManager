@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Silksong.DataManager;
 
 /// Interface for mods that need to store data that would be shared across all BepInEx profiles.
@@ -19,6 +21,7 @@ public interface IGlobalDataMod<T> : IGlobalDataMod
 
 /// An implementation detail that must be made public due to accessibility rules.
 /// Client mods should instead implement <see cref="IGlobalDataMod{T}"/>.
+[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IGlobalDataMod
 {
     /// The target type to use when deserializing save data for this mod.
