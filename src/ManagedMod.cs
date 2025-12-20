@@ -151,7 +151,8 @@ internal record ManagedMod(
             onLoad(obj);
             DataManagerPlugin.InstanceLogger.LogInfo($"Loaded {dataType.Name} for mod {Guid}");
         }
-        catch (IO.FileNotFoundException)
+        catch (System.Exception err)
+            when (err is IO.FileNotFoundException or IO.DirectoryNotFoundException)
         {
             onLoad(null);
         }
