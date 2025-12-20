@@ -50,13 +50,13 @@ used by DataManager can all be found in the `DataPaths` class.
 
 Global data is available for cases where data is needed across multiple saves, or outside of saves such as in the menu.
 DataManager offers 2 types of global data which mod developers can choose between based on their use case. Save data
-is automatically sychronized across devices by Steam Cloud
+is automatically sychronized across devices by Steam Cloud.
 
 #### `IProfileDataMod`
 
 `IProfileDataMod<T>` is ideal for mods that want a more powerful alternative to BepInEx configuration. Data is stored
 in the same location as BepInEx configuration files, which means that is scoped to your profile in the mod loader. It
-is loaded when the game opens and saved when the game closes.
+is loaded when the game opens and saved when the game closes; you can access it in your plugin's `Start` method.
 
 #### `IGlobalDataMod`
 
@@ -66,7 +66,8 @@ is loaded when the game opens and saved when the game closes.
 2. It will is available across multiple profiles
 
 Therefore, if either of these use cases are relevant to your mod, you should use `IGlobalDataMod`. Similar to
-`IProfileDataMod<T>`, this data is loaded when the game opens and saved when the game closes.
+`IProfileDataMod<T>`, this data is loaded when the game opens and saved when the game closes; you can access it in
+your plugin's `Start` method.
 
 ### Save-specific data
 
