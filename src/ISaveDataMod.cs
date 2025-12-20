@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using SC = System.ComponentModel;
 
 namespace Silksong.DataManager;
 
@@ -21,7 +21,7 @@ public interface ISaveDataMod<T> : ISaveDataMod
 
 /// An implementation detail that must be made public due to accessibility rules.
 /// Client mods should instead implement <see cref="ISaveDataMod{T}"/>.
-[EditorBrowsable(EditorBrowsableState.Never)]
+[SC.EditorBrowsable(SC.EditorBrowsableState.Never)]
 public interface ISaveDataMod
 {
     /// The target type to use when deserializing save data for this mod.
