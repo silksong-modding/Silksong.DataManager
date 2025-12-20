@@ -63,9 +63,9 @@ is loaded when the game opens and saved when the game closes; you can access it 
 `IGlobalDataMod<T>` is an alternative to `IProfileDataMod<T>` which is saved in the save data directory, in
 `<save directory>/Modded/Global/<plugin ID>.json.dat`. There are 2 benefits of this location:
 1. It will be synced across devices by Steam Cloud
-2. It will is available across multiple profiles
+2. It will be available across multiple profiles
 
-Therefore, if either of these use cases are relevant to your mod, you should use `IGlobalDataMod`. Similar to
+Therefore, if either of these use cases are relevant to your mod, you should use `IGlobalDataMod<T>`. Similar to
 `IProfileDataMod<T>`, this data is loaded when the game opens and saved when the game closes; you can access it in
 your plugin's `Start` method.
 
