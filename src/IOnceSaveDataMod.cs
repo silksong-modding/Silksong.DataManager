@@ -1,3 +1,5 @@
+using SC = System.ComponentModel;
+
 namespace Silksong.DataManager;
 
 /// Interface for mods that need to store some save data at the start of each new game,
@@ -26,6 +28,7 @@ public interface IOnceSaveDataMod<T> : IOnceSaveDataMod
 
 /// An implementation detail that must be made public due to accessibility rules.
 /// Client mods should instead implement <see cref="IOnceSaveDataMod{T}"/>.
+[SC.EditorBrowsable(SC.EditorBrowsableState.Never)]
 public interface IOnceSaveDataMod
 {
     /// The target type to use when deserializing save data for this mod.

@@ -1,3 +1,5 @@
+using SC = System.ComponentModel;
+
 namespace Silksong.DataManager;
 
 /// Interface for mods that need to store data scoped to a BepInEx profile.
@@ -19,6 +21,7 @@ public interface IProfileDataMod<T> : IProfileDataMod
 
 /// An implementation detail that must be made public due to accessibility rules.
 /// Client mods should instead implement <see cref="IProfileDataMod{T}"/>.
+[SC.EditorBrowsable(SC.EditorBrowsableState.Never)]
 public interface IProfileDataMod
 {
     /// The target type to use when deserializing save data for this mod.
