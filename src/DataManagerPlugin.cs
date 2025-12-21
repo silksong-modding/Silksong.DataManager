@@ -34,8 +34,12 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
     {
         foreach (var (guid, info) in Bep.Bootstrap.Chainloader.PluginInfos)
         {
-            if (ManagedMods.ContainsKey(guid))
+            if (ManagedMods.TryGetValue(guid, out var existingMod))
+            {
+                existingMod.LoadGlobalData();
+                existingMod.LoadProfileData();
                 continue;
+            }
 
             if (
                 info?.Instance is not { } plugin
