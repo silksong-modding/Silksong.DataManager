@@ -12,6 +12,9 @@ internal record ManagedMod(
     IOnceSaveDataMod? OnceSaveData
 )
 {
+    private bool _loadedProfileData = false;
+    private bool _loadedGlobalData = false;
+
     internal static bool TryCreate(
         Bep.BaseUnityPlugin plugin,
         [NotNullWhen(true)] out ManagedMod? instance
@@ -38,6 +41,9 @@ internal record ManagedMod(
 
     internal void LoadProfileData()
     {
+        if (_loadedProfileData)
+            return;
+
         if (ProfileData is not null)
         {
             LoadUntypedData(
@@ -46,6 +52,8 @@ internal record ManagedMod(
                 obj => ProfileData.UntypedProfileData = obj
             );
         }
+
+        _loadedProfileData = true;
     }
 
     internal void SaveProfileData()
@@ -62,6 +70,9 @@ internal record ManagedMod(
 
     internal void LoadGlobalData()
     {
+        if (_loadedGlobalData)
+            return;
+
         if (GlobalData is not null)
         {
             // TODO(UserIsntAvailable): Overrides
@@ -71,6 +82,8 @@ internal record ManagedMod(
                 obj => GlobalData.UntypedGlobalData = obj
             );
         }
+
+        _loadedGlobalData = true;
     }
 
     internal void SaveGlobalData()

@@ -18,7 +18,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
     internal static DataManagerPlugin Instance { get; private set; } = null!;
     internal static Bep.Logging.ManualLogSource InstanceLogger => Instance.Logger;
 
-    internal CG.List<ManagedMod> ManagedMods = [];
+    internal CG.Dictionary<string, ManagedMod> ManagedMods { get; set; } = [];
 
     private void Awake()
     {
@@ -34,6 +34,9 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
     {
         foreach (var (guid, info) in Bep.Bootstrap.Chainloader.PluginInfos)
         {
+            if (ManagedMods.ContainsKey(guid))
+                continue;
+
             if (
                 info?.Instance is not { } plugin
                 || !ManagedMod.TryCreate(plugin, out var managedMod)
@@ -42,7 +45,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
 
             managedMod.LoadProfileData();
             managedMod.LoadGlobalData();
-            ManagedMods.Add(managedMod);
+            ManagedMods.Add(guid, managedMod);
         }
     }
 
