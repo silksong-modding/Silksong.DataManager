@@ -7,11 +7,11 @@ namespace Silksong.DataManager;
 
 internal record ManagedMod(
     string Guid,
-    BaseUnityPlugin Plugin,
     IProfileDataMod? ProfileData,
     IGlobalDataMod? GlobalData,
     ISaveDataMod? SaveData,
-    IOnceSaveDataMod? OnceSaveData
+    IOnceSaveDataMod? OnceSaveData,
+    IRequiredMod? RequiredMod
 )
 {
     internal static bool TryCreate(
@@ -26,11 +26,18 @@ internal record ManagedMod(
         var globalData = plugin as IGlobalDataMod;
         var saveData = plugin as ISaveDataMod;
         var onceSaveData = plugin as IOnceSaveDataMod;
+        var requiredMod = plugin as IRequiredMod;
 
-        if (profileData is null && globalData is null && saveData is null && onceSaveData is null)
+        if (
+            profileData is null
+            && globalData is null
+            && saveData is null
+            && onceSaveData is null
+            && requiredMod is null
+        )
             return false;
 
-        instance = new(guid, plugin, profileData, globalData, saveData, onceSaveData);
+        instance = new(guid, profileData, globalData, saveData, onceSaveData, requiredMod);
 
         // TODO(UserIsntAvailable): Display which interfaces the plugin implements.
         DataManagerPlugin.InstanceLogger.LogInfo($"{guid} uses data manager");
@@ -41,7 +48,7 @@ internal record ManagedMod(
     public bool HasAnyGlobalData => ProfileData is not null || GlobalData is not null;
     public bool HasAnySaveData => SaveData is not null || OnceSaveData is not null;
 
-    public bool IsRequired => HasAnySaveData && Plugin is IRequiredMod reqMod && reqMod.IsRequired;
+    public bool IsRequired => RequiredMod?.IsRequired ?? false;
 
     internal void LoadProfileData()
     {
