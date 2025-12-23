@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using BepInEx;
 using Bep = BepInEx;
 using IO = System.IO;
 
@@ -6,6 +7,7 @@ namespace Silksong.DataManager;
 
 internal record ManagedMod(
     string Guid,
+    BaseUnityPlugin Plugin,
     IProfileDataMod? ProfileData,
     IGlobalDataMod? GlobalData,
     ISaveDataMod? SaveData,
@@ -28,13 +30,18 @@ internal record ManagedMod(
         if (profileData is null && globalData is null && saveData is null && onceSaveData is null)
             return false;
 
-        instance = new(guid, profileData, globalData, saveData, onceSaveData);
+        instance = new(guid, plugin, profileData, globalData, saveData, onceSaveData);
 
         // TODO(UserIsntAvailable): Display which interfaces the plugin implements.
         DataManagerPlugin.InstanceLogger.LogInfo($"{guid} uses data manager");
 
         return true;
     }
+
+    public bool HasAnyGlobalData => ProfileData is not null || GlobalData is not null;
+    public bool HasAnySaveData => SaveData is not null || OnceSaveData is not null;
+
+    public bool IsRequired => HasAnySaveData && Plugin is IRequiredMod reqMod && reqMod.IsRequired;
 
     internal void LoadProfileData()
     {

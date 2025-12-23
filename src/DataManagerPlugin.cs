@@ -1,3 +1,4 @@
+using BepInEx.Configuration;
 using static System.Linq.Enumerable;
 using Bep = BepInEx;
 using CG = System.Collections.Generic;
@@ -11,14 +12,28 @@ namespace Silksong.DataManager;
 [Bep.BepInAutoPlugin(id: "org.silksong-modding.datamanager")]
 [Bep.BepInDependency("org.silksong-modding.i18n")]
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-public partial class DataManagerPlugin : Bep.BaseUnityPlugin
+public partial class DataManagerPlugin : Bep.BaseUnityPlugin, IOnceSaveDataMod<Data.DMOnceSaveData>
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
     // These properties will never be accessed before Start executes.
     internal static DataManagerPlugin Instance { get; private set; } = null!;
     internal static Bep.Logging.ManualLogSource InstanceLogger => Instance.Logger;
 
-    internal CG.List<ManagedMod> ManagedMods = [];
+    internal CG.Dictionary<string, ManagedMod> ManagedMods = [];
+
+    internal ManagedMod ManagedSelf => ManagedMods[this.Info.Metadata.GUID];
+
+    /// <summary>
+    /// The OnceSaveData for DataManager.
+    /// </summary>
+    internal Data.DMOnceSaveData? OnceSaveData { get; set; }
+
+    // The interface implementation has to be explicit because OnceSaveData is nonpublic.
+    Data.DMOnceSaveData? IOnceSaveDataMod<Data.DMOnceSaveData>.OnceSaveData
+    {
+        get => OnceSaveData;
+        set => OnceSaveData = value;
+    }
 
     private void Awake()
     {
@@ -42,7 +57,7 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
 
             managedMod.LoadProfileData();
             managedMod.LoadGlobalData();
-            ManagedMods.Add(managedMod);
+            ManagedMods.Add(guid, managedMod);
         }
     }
 
@@ -86,29 +101,18 @@ public partial class DataManagerPlugin : Bep.BaseUnityPlugin
 
     internal CG.List<string> MissingMods(int saveSlot)
     {
-        var syncedFilenameSuffix = ".json.dat";
-        var saveDir = DataPaths.SaveSlotDir(saveSlot);
         try
         {
-            // The ?* instead of just * is to work around a quirk of EnumerateFiles;
-            // see https://learn.microsoft.com/en-us/dotnet/api/system.io.directory.enumeratefiles?view=netstandard-2.1#system-io-directory-enumeratefiles(system-string-system-string)
-            return IO
-                .Directory.EnumerateFiles(
-                    saveDir,
-                    "?*" + syncedFilenameSuffix,
-                    IO.SearchOption.AllDirectories
-                )
-                .Select(path =>
-                {
-                    var name = IO.Path.GetFileName(path);
-                    return name.Substring(0, name.Length - syncedFilenameSuffix.Length);
-                })
-                .Where(modGUID => !Bep.Bootstrap.Chainloader.PluginInfos.ContainsKey(modGUID))
-                .ToList();
+            ManagedSelf.LoadOnceSaveData(saveSlot);
         }
-        catch (IO.DirectoryNotFoundException)
+        catch (IO.IOException)
         {
             return [];
         }
+
+        var requiredMods = this.OnceSaveData?.RequiredModGuids ?? [];
+        var missingMods = requiredMods.Where(guid => !ManagedMods.ContainsKey(guid)).ToList();
+
+        return missingMods;
     }
 }

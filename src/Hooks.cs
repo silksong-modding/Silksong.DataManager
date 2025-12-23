@@ -1,3 +1,5 @@
+using System.Linq;
+using CG = System.Collections.Generic;
 using HL = HarmonyLib;
 using IO = System.IO;
 using TC = TeamCherry;
@@ -13,7 +15,7 @@ internal static class OnQuitGameHook
         IO.Directory.CreateDirectory(DataPaths.ProfileDataDir);
         IO.Directory.CreateDirectory(DataPaths.GlobalDataDir);
 
-        foreach (var mod in DataManagerPlugin.Instance.ManagedMods)
+        foreach (var mod in DataManagerPlugin.Instance.ManagedMods.Values)
         {
             mod.SaveProfileData();
             mod.SaveGlobalData();
@@ -31,7 +33,7 @@ internal static class SaveDataLoadHook
 {
     private static void Postfix(int saveSlot)
     {
-        var mods = DataManagerPlugin.Instance.ManagedMods;
+        var mods = DataManagerPlugin.Instance.ManagedMods.Values;
 
         if (saveSlot == 0)
         {
@@ -83,7 +85,7 @@ internal static class SaveDataSaveHook
 
             IO.Directory.CreateDirectory(DataPaths.SaveDataDir(saveSlot));
 
-            foreach (var mod in DataManagerPlugin.Instance.ManagedMods)
+            foreach (var mod in DataManagerPlugin.Instance.ManagedMods.Values)
             {
                 mod.SaveSaveData(saveSlot);
             }
@@ -104,7 +106,7 @@ internal static class OnceSetupHook
             return;
         }
 
-        var mods = DataManagerPlugin.Instance.ManagedMods;
+        var mods = DataManagerPlugin.Instance.ManagedMods.Values;
         var saveDir = DataPaths.OnceSaveDataDir(saveSlot);
         // Clear any existing modded data for this slot.
         // This can happen if a savefile is started with a mod active, and then the
@@ -114,6 +116,9 @@ internal static class OnceSetupHook
         // in the meantime.
         DataManagerPlugin.ClearModdedSaveSlot(saveSlot);
         IO.Directory.CreateDirectory(saveDir);
+
+        var requiredModGuids = mods.Where(x => x.IsRequired).Select(x => x.Guid).ToList();
+        DataManagerPlugin.Instance.OnceSaveData = new() { RequiredModGuids = requiredModGuids };
 
         foreach (var mod in mods)
         {
