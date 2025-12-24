@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using BepInEx;
 using Bep = BepInEx;
 using IO = System.IO;
 
@@ -9,7 +10,8 @@ internal record ManagedMod(
     IProfileDataMod? ProfileData,
     IGlobalDataMod? GlobalData,
     ISaveDataMod? SaveData,
-    IOnceSaveDataMod? OnceSaveData
+    IOnceSaveDataMod? OnceSaveData,
+    IRequiredMod? RequiredMod
 )
 {
     internal static bool TryCreate(
@@ -24,17 +26,29 @@ internal record ManagedMod(
         var globalData = plugin as IGlobalDataMod;
         var saveData = plugin as ISaveDataMod;
         var onceSaveData = plugin as IOnceSaveDataMod;
+        var requiredMod = plugin as IRequiredMod;
 
-        if (profileData is null && globalData is null && saveData is null && onceSaveData is null)
+        if (
+            profileData is null
+            && globalData is null
+            && saveData is null
+            && onceSaveData is null
+            && requiredMod is null
+        )
             return false;
 
-        instance = new(guid, profileData, globalData, saveData, onceSaveData);
+        instance = new(guid, profileData, globalData, saveData, onceSaveData, requiredMod);
 
         // TODO(UserIsntAvailable): Display which interfaces the plugin implements.
         DataManagerPlugin.InstanceLogger.LogInfo($"{guid} uses data manager");
 
         return true;
     }
+
+    public bool HasAnyGlobalData => ProfileData is not null || GlobalData is not null;
+    public bool HasAnySaveData => SaveData is not null || OnceSaveData is not null;
+
+    public bool IsRequired => RequiredMod?.IsRequired ?? false;
 
     internal void LoadProfileData()
     {
