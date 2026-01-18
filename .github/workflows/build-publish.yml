@@ -177,3 +177,11 @@ jobs:
           Build attested at ${{ needs.build.outputs.attestation-url }}
         files: |
           thunderstore/dist/*.zip
+
+  secret-check:
+    runs-on: ubuntu-latest
+    outputs:
+      has-nuget-secret: ${{ secrets.NUGET_API_KEY != '' }}
+      has-thunderstore-secret: ${{ secrets.THUNDERSTORE_API_KEY != '' }}
+    steps:
+      - run: echo no-op
