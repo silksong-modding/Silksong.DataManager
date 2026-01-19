@@ -189,6 +189,5 @@ jobs:
     outputs:
       has-nuget-secret: ${{ secrets.NUGET_API_KEY != '' }}
       has-thunderstore-secret: ${{ secrets.THUNDERSTORE_API_KEY != '' }}
-      has-foo: ${{ secrets.FOO != '' }}
     steps:
       - run: echo no-op
