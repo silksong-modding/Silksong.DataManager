@@ -1,5 +1,4 @@
 using System.Linq;
-using CG = System.Collections.Generic;
 using HL = HarmonyLib;
 using IO = System.IO;
 using TC = TeamCherry;
@@ -37,17 +36,6 @@ internal static class SaveDataLoadHook
 
         if (saveSlot == 0)
         {
-            foreach (var mod in mods)
-            {
-                if (mod.SaveData is { } saveData)
-                {
-                    saveData.ReadSaveData(null);
-                }
-                if (mod.OnceSaveData is { } onceSaveData)
-                {
-                    onceSaveData.ReadOnceSaveData(null);
-                }
-            }
             return;
         }
 
@@ -205,5 +193,31 @@ internal static class OverrideSaveDataHook
                 $"Error overring save data for slot {saveSlot}: {err}"
             );
         }
+    }
+}
+
+[HL.HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMainMenu))]
+internal static class SavaDataSetToNullHook
+{
+    private static void Prefix(ref System.Action<bool> callback)
+    {
+        var callbackCopy = callback;
+        callback = (saveCompleteValue) =>
+        {
+            callbackCopy?.Invoke(saveCompleteValue);
+
+            DataManagerPlugin.InstanceLogger.LogInfo("Setting mods SaveData to null");
+            foreach (var mod in DataManagerPlugin.Instance.ManagedMods.Values)
+            {
+                if (mod.SaveData is { } saveData)
+                {
+                    saveData.ReadSaveData(null);
+                }
+                if (mod.OnceSaveData is { } onceSaveData)
+                {
+                    onceSaveData.ReadOnceSaveData(null);
+                }
+            }
+        };
     }
 }
