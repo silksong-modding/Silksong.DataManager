@@ -9,8 +9,8 @@ internal record ManagedMod(
     string Guid,
     IProfileDataMod? ProfileData,
     IGlobalDataMod? GlobalData,
-    ISaveDataMod? SaveData,
-    IOnceSaveDataMod? OnceSaveData,
+    IRawSaveDataMod? SaveData,
+    IRawOnceSaveDataMod? OnceSaveData,
     IRequiredMod? RequiredMod
 )
 {
@@ -24,8 +24,8 @@ internal record ManagedMod(
         var guid = plugin.Info.Metadata.GUID;
         var profileData = plugin as IProfileDataMod;
         var globalData = plugin as IGlobalDataMod;
-        var saveData = plugin as ISaveDataMod;
-        var onceSaveData = plugin as IOnceSaveDataMod;
+        var saveData = plugin as IRawSaveDataMod;
+        var onceSaveData = plugin as IRawOnceSaveDataMod;
         var requiredMod = plugin as IRequiredMod;
 
         if (
@@ -103,23 +103,15 @@ internal record ManagedMod(
     {
         if (SaveData is not null)
         {
-            LoadUntypedData(
-                SaveDataPath(saveSlot),
-                SaveData.SaveDataType,
-                obj => SaveData.UntypedSaveData = obj
-            );
+            LoadStreamData(SaveDataPath(saveSlot), SaveData.ReadSaveData);
         }
     }
 
     internal void SaveSaveData(int saveSlot)
     {
-        if (SaveData is not null)
+        if (SaveData is not null && SaveData.HasSaveData)
         {
-            SaveUntypedData(
-                SaveDataPath(saveSlot),
-                SaveData.SaveDataType,
-                SaveData.UntypedSaveData
-            );
+            SaveStreamData(SaveDataPath(saveSlot), SaveData.WriteSaveData);
         }
     }
 
@@ -127,23 +119,15 @@ internal record ManagedMod(
     {
         if (OnceSaveData is not null)
         {
-            LoadUntypedData(
-                OnceSaveDataPath(saveSlot),
-                OnceSaveData.OnceSaveDataType,
-                obj => OnceSaveData.UntypedOnceSaveData = obj
-            );
+            LoadStreamData(OnceSaveDataPath(saveSlot), OnceSaveData.ReadOnceSaveData);
         }
     }
 
     internal void SaveOnceSaveData(int saveSlot)
     {
-        if (OnceSaveData is not null)
+        if (OnceSaveData is not null && OnceSaveData.HasOnceSaveData)
         {
-            SaveUntypedData(
-                OnceSaveDataPath(saveSlot),
-                OnceSaveData.OnceSaveDataType,
-                OnceSaveData.UntypedOnceSaveData
-            );
+            SaveStreamData(OnceSaveDataPath(saveSlot), OnceSaveData.WriteOnceSaveData);
         }
     }
 
@@ -156,6 +140,25 @@ internal record ManagedMod(
 
     private string OnceSaveDataPath(int slot) =>
         IO.Path.Combine(DataPaths.OnceSaveDataDir(slot), $"{Guid}.json.dat");
+
+    private void LoadStreamData(string path, System.Action<IO.Stream?> reader)
+    {
+        try
+        {
+            using var file = IO.File.OpenRead(path);
+            reader(file);
+        }
+        catch (System.Exception err)
+            when (err is IO.FileNotFoundException or IO.DirectoryNotFoundException)
+        {
+            reader(null);
+        }
+        catch (System.Exception err)
+        {
+            reader(null);
+            DataManagerPlugin.InstanceLogger.LogError($"Error loading data for mod {Guid}: {err}");
+        }
+    }
 
     private void LoadUntypedData(string path, System.Type dataType, System.Action<object?> onLoad)
     {
@@ -176,6 +179,19 @@ internal record ManagedMod(
             DataManagerPlugin.InstanceLogger.LogError(
                 $"Error loading {dataType.Name} for mod {Guid}: {err}"
             );
+        }
+    }
+
+    private void SaveStreamData(string path, System.Action<IO.Stream> writer)
+    {
+        try
+        {
+            using var file = IO.File.Create(path);
+            writer(file);
+        }
+        catch (System.Exception err)
+        {
+            DataManagerPlugin.InstanceLogger.LogError($"Error saving data for mod {Guid}: {err}");
         }
     }
 
