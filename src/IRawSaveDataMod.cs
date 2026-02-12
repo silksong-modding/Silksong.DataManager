@@ -10,6 +10,7 @@ public interface IRawSaveDataMod
     /// If true, a data file will be created for this mod when saving the game.
     bool HasSaveData { get; }
 
+    /// Writes the save data for the current file.
     void WriteSaveData(IO.Stream saveFile);
 
     /// Called when a save file is loaded. If no data is present for this mod, saveFile is null.

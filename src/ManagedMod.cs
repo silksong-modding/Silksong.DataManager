@@ -7,8 +7,8 @@ namespace Silksong.DataManager;
 
 internal record ManagedMod(
     string Guid,
-    IProfileDataMod? ProfileData,
-    IGlobalDataMod? GlobalData,
+    IRawProfileDataMod? ProfileData,
+    IRawGlobalDataMod? GlobalData,
     IRawSaveDataMod? SaveData,
     IRawOnceSaveDataMod? OnceSaveData,
     IRequiredMod? RequiredMod
@@ -22,8 +22,8 @@ internal record ManagedMod(
         instance = null!;
 
         var guid = plugin.Info.Metadata.GUID;
-        var profileData = plugin as IProfileDataMod;
-        var globalData = plugin as IGlobalDataMod;
+        var profileData = plugin as IRawProfileDataMod;
+        var globalData = plugin as IRawGlobalDataMod;
         var saveData = plugin as IRawSaveDataMod;
         var onceSaveData = plugin as IRawOnceSaveDataMod;
         var requiredMod = plugin as IRequiredMod;
@@ -54,23 +54,15 @@ internal record ManagedMod(
     {
         if (ProfileData is not null)
         {
-            LoadUntypedData(
-                ProfileDataPath,
-                ProfileData.ProfileDataType,
-                obj => ProfileData.UntypedProfileData = obj
-            );
+            LoadStreamData(ProfileDataPath, ProfileData.ReadProfileData);
         }
     }
 
     internal void SaveProfileData()
     {
-        if (ProfileData is not null)
+        if (ProfileData is not null && ProfileData.HasProfileData)
         {
-            SaveUntypedData(
-                ProfileDataPath,
-                ProfileData.ProfileDataType,
-                ProfileData.UntypedProfileData
-            );
+            SaveStreamData(ProfileDataPath, ProfileData.WriteProfileData);
         }
     }
 
@@ -79,23 +71,15 @@ internal record ManagedMod(
         if (GlobalData is not null)
         {
             // TODO(UserIsntAvailable): Overrides
-            LoadUntypedData(
-                GlobalDataPath,
-                GlobalData.GlobalDataType,
-                obj => GlobalData.UntypedGlobalData = obj
-            );
+            LoadStreamData(GlobalDataPath, GlobalData.ReadGlobalData);
         }
     }
 
     internal void SaveGlobalData()
     {
-        if (GlobalData is not null)
+        if (GlobalData is not null && GlobalData.HasGlobalData)
         {
-            SaveUntypedData(
-                GlobalDataPath,
-                GlobalData.GlobalDataType,
-                GlobalData.UntypedGlobalData
-            );
+            SaveStreamData(GlobalDataPath, GlobalData.WriteGlobalData);
         }
     }
 
@@ -160,28 +144,6 @@ internal record ManagedMod(
         }
     }
 
-    private void LoadUntypedData(string path, System.Type dataType, System.Action<object?> onLoad)
-    {
-        try
-        {
-            var obj = Json.JsonUtil.Deserialize(path, dataType);
-            onLoad(obj);
-            DataManagerPlugin.InstanceLogger.LogInfo($"Loaded {dataType.Name} for mod {Guid}");
-        }
-        catch (System.Exception err)
-            when (err is IO.FileNotFoundException or IO.DirectoryNotFoundException)
-        {
-            onLoad(null);
-        }
-        catch (System.Exception err)
-        {
-            onLoad(null);
-            DataManagerPlugin.InstanceLogger.LogError(
-                $"Error loading {dataType.Name} for mod {Guid}: {err}"
-            );
-        }
-    }
-
     private void SaveStreamData(string path, System.Action<IO.Stream> writer)
     {
         try
@@ -192,26 +154,6 @@ internal record ManagedMod(
         catch (System.Exception err)
         {
             DataManagerPlugin.InstanceLogger.LogError($"Error saving data for mod {Guid}: {err}");
-        }
-    }
-
-    private void SaveUntypedData(string path, System.Type dataType, object? untypedData)
-    {
-        if (untypedData is null)
-        {
-            return;
-        }
-
-        try
-        {
-            Json.JsonUtil.Serialize(path, untypedData);
-            DataManagerPlugin.InstanceLogger.LogInfo($"Saved {dataType.Name} for mod {Guid}");
-        }
-        catch (System.Exception err)
-        {
-            DataManagerPlugin.InstanceLogger.LogError(
-                $"Error saving {dataType.Name} for mod {Guid}: {err}"
-            );
         }
     }
 }

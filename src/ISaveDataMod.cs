@@ -12,6 +12,7 @@ public interface ISaveDataMod<T> : IRawSaveDataMod
 
     bool IRawSaveDataMod.HasSaveData => SaveData != null;
 
+    /// Writes the save data for the current file.
     void IRawSaveDataMod.WriteSaveData(IO.Stream saveFile)
     {
         using var sw = new IO.StreamWriter(saveFile);
@@ -31,4 +32,6 @@ public interface ISaveDataMod<T> : IRawSaveDataMod
     }
 }
 
+// Stub for binary compatibility with mods that reference earlier
+// versions of DataManager.
 internal interface ISaveDataMod { }

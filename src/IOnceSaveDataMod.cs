@@ -38,4 +38,6 @@ public interface IOnceSaveDataMod<T> : IRawOnceSaveDataMod
     }
 }
 
+// Stub for binary compatibility with mods that reference earlier
+// versions of DataManager.
 internal interface IOnceSaveDataMod { }
