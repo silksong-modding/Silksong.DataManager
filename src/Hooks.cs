@@ -41,11 +41,11 @@ internal static class SaveDataLoadHook
             {
                 if (mod.SaveData is { } saveData)
                 {
-                    saveData.UntypedSaveData = null;
+                    saveData.ReadSaveData(null);
                 }
                 if (mod.OnceSaveData is { } onceSaveData)
                 {
-                    onceSaveData.UntypedOnceSaveData = null;
+                    onceSaveData.ReadOnceSaveData(null);
                 }
             }
             return;
