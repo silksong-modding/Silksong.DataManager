@@ -1,32 +1,37 @@
-using SC = System.ComponentModel;
+using IO = System.IO;
 
 namespace Silksong.DataManager;
 
 /// Interface for mods that need to store save data.
-public interface ISaveDataMod<T> : ISaveDataMod
+public interface ISaveDataMod<T> : IRawSaveDataMod
     where T : class
 {
     /// If there are errors while loading the data (eg. no such data exists), or the game is at the
     /// title screen, this property is set to null.
     T? SaveData { get; set; }
 
-    System.Type ISaveDataMod.SaveDataType => typeof(T);
+    bool IRawSaveDataMod.HasSaveData => SaveData != null;
 
-    object? ISaveDataMod.UntypedSaveData
+    /// Writes the save data for the current file.
+    void IRawSaveDataMod.WriteSaveData(IO.Stream saveFile)
     {
-        get => SaveData;
-        set => SaveData = value == null ? null : (T)value;
+        using var sw = new IO.StreamWriter(saveFile);
+        // This is only called if SaveData is not null.
+        Json.JsonUtil.Serialize(sw, SaveData!);
+    }
+
+    void IRawSaveDataMod.ReadSaveData(IO.Stream? saveFile)
+    {
+        if (saveFile == null)
+        {
+            SaveData = null;
+            return;
+        }
+        using var sr = new IO.StreamReader(saveFile);
+        SaveData = Json.JsonUtil.Deserialize<T>(sr);
     }
 }
 
-/// An implementation detail that must be made public due to accessibility rules.
-/// Client mods should instead implement <see cref="ISaveDataMod{T}"/>.
-[SC.EditorBrowsable(SC.EditorBrowsableState.Never)]
-public interface ISaveDataMod
-{
-    /// The target type to use when deserializing save data for this mod.
-    System.Type SaveDataType { get; }
-
-    /// The object (of type <see cref="SaveDataType"/>) to be serialized.
-    object? UntypedSaveData { get; set; }
-}
+// Stub for binary compatibility with mods that reference earlier
+// versions of DataManager.
+internal interface ISaveDataMod { }

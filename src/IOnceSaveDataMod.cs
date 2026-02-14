@@ -1,10 +1,10 @@
-using SC = System.ComponentModel;
+using IO = System.IO;
 
 namespace Silksong.DataManager;
 
 /// Interface for mods that need to store some save data at the start of each new game,
 /// but don't need to change it afterwards.
-public interface IOnceSaveDataMod<T> : IOnceSaveDataMod
+public interface IOnceSaveDataMod<T> : IRawOnceSaveDataMod
     where T : class
 {
     /// The once-save data for the current file.
@@ -17,23 +17,27 @@ public interface IOnceSaveDataMod<T> : IOnceSaveDataMod
     /// title screen, this property is set to null.
     T? OnceSaveData { get; set; }
 
-    System.Type IOnceSaveDataMod.OnceSaveDataType => typeof(T);
+    bool IRawOnceSaveDataMod.HasOnceSaveData => OnceSaveData != null;
 
-    object? IOnceSaveDataMod.UntypedOnceSaveData
+    void IRawOnceSaveDataMod.WriteOnceSaveData(IO.Stream saveFile)
     {
-        get => OnceSaveData;
-        set => OnceSaveData = value == null ? null : (T)value;
+        using var sw = new IO.StreamWriter(saveFile);
+        // This is only called if OnceSaveData is not null.
+        Json.JsonUtil.Serialize(sw, OnceSaveData!);
+    }
+
+    void IRawOnceSaveDataMod.ReadOnceSaveData(IO.Stream? saveFile)
+    {
+        if (saveFile == null)
+        {
+            OnceSaveData = null;
+            return;
+        }
+        using var sr = new IO.StreamReader(saveFile);
+        OnceSaveData = Json.JsonUtil.Deserialize<T>(sr);
     }
 }
 
-/// An implementation detail that must be made public due to accessibility rules.
-/// Client mods should instead implement <see cref="IOnceSaveDataMod{T}"/>.
-[SC.EditorBrowsable(SC.EditorBrowsableState.Never)]
-public interface IOnceSaveDataMod
-{
-    /// The target type to use when deserializing save data for this mod.
-    System.Type OnceSaveDataType { get; }
-
-    /// The object (of type <see cref="OnceSaveDataType"/>) to be serialized.
-    object? UntypedOnceSaveData { get; set; }
-}
+// Stub for binary compatibility with mods that reference earlier
+// versions of DataManager.
+internal interface IOnceSaveDataMod { }

@@ -7,10 +7,10 @@ namespace Silksong.DataManager;
 
 internal record ManagedMod(
     string Guid,
-    IProfileDataMod? ProfileData,
-    IGlobalDataMod? GlobalData,
-    ISaveDataMod? SaveData,
-    IOnceSaveDataMod? OnceSaveData,
+    IRawProfileDataMod? ProfileData,
+    IRawGlobalDataMod? GlobalData,
+    IRawSaveDataMod? SaveData,
+    IRawOnceSaveDataMod? OnceSaveData,
     IRequiredMod? RequiredMod
 )
 {
@@ -22,10 +22,10 @@ internal record ManagedMod(
         instance = null!;
 
         var guid = plugin.Info.Metadata.GUID;
-        var profileData = plugin as IProfileDataMod;
-        var globalData = plugin as IGlobalDataMod;
-        var saveData = plugin as ISaveDataMod;
-        var onceSaveData = plugin as IOnceSaveDataMod;
+        var profileData = plugin as IRawProfileDataMod;
+        var globalData = plugin as IRawGlobalDataMod;
+        var saveData = plugin as IRawSaveDataMod;
+        var onceSaveData = plugin as IRawOnceSaveDataMod;
         var requiredMod = plugin as IRequiredMod;
 
         if (
@@ -54,23 +54,15 @@ internal record ManagedMod(
     {
         if (ProfileData is not null)
         {
-            LoadUntypedData(
-                ProfileDataPath,
-                ProfileData.ProfileDataType,
-                obj => ProfileData.UntypedProfileData = obj
-            );
+            LoadStreamData(ProfileDataPath, ProfileData.ReadProfileData);
         }
     }
 
     internal void SaveProfileData()
     {
-        if (ProfileData is not null)
+        if (ProfileData is not null && ProfileData.HasProfileData)
         {
-            SaveUntypedData(
-                ProfileDataPath,
-                ProfileData.ProfileDataType,
-                ProfileData.UntypedProfileData
-            );
+            SaveStreamData(ProfileDataPath, ProfileData.WriteProfileData);
         }
     }
 
@@ -79,23 +71,15 @@ internal record ManagedMod(
         if (GlobalData is not null)
         {
             // TODO(UserIsntAvailable): Overrides
-            LoadUntypedData(
-                GlobalDataPath,
-                GlobalData.GlobalDataType,
-                obj => GlobalData.UntypedGlobalData = obj
-            );
+            LoadStreamData(GlobalDataPath, GlobalData.ReadGlobalData);
         }
     }
 
     internal void SaveGlobalData()
     {
-        if (GlobalData is not null)
+        if (GlobalData is not null && GlobalData.HasGlobalData)
         {
-            SaveUntypedData(
-                GlobalDataPath,
-                GlobalData.GlobalDataType,
-                GlobalData.UntypedGlobalData
-            );
+            SaveStreamData(GlobalDataPath, GlobalData.WriteGlobalData);
         }
     }
 
@@ -103,23 +87,15 @@ internal record ManagedMod(
     {
         if (SaveData is not null)
         {
-            LoadUntypedData(
-                SaveDataPath(saveSlot),
-                SaveData.SaveDataType,
-                obj => SaveData.UntypedSaveData = obj
-            );
+            LoadStreamData(SaveDataPath(saveSlot), SaveData.ReadSaveData);
         }
     }
 
     internal void SaveSaveData(int saveSlot)
     {
-        if (SaveData is not null)
+        if (SaveData is not null && SaveData.HasSaveData)
         {
-            SaveUntypedData(
-                SaveDataPath(saveSlot),
-                SaveData.SaveDataType,
-                SaveData.UntypedSaveData
-            );
+            SaveStreamData(SaveDataPath(saveSlot), SaveData.WriteSaveData);
         }
     }
 
@@ -127,23 +103,15 @@ internal record ManagedMod(
     {
         if (OnceSaveData is not null)
         {
-            LoadUntypedData(
-                OnceSaveDataPath(saveSlot),
-                OnceSaveData.OnceSaveDataType,
-                obj => OnceSaveData.UntypedOnceSaveData = obj
-            );
+            LoadStreamData(OnceSaveDataPath(saveSlot), OnceSaveData.ReadOnceSaveData);
         }
     }
 
     internal void SaveOnceSaveData(int saveSlot)
     {
-        if (OnceSaveData is not null)
+        if (OnceSaveData is not null && OnceSaveData.HasOnceSaveData)
         {
-            SaveUntypedData(
-                OnceSaveDataPath(saveSlot),
-                OnceSaveData.OnceSaveDataType,
-                OnceSaveData.UntypedOnceSaveData
-            );
+            SaveStreamData(OnceSaveDataPath(saveSlot), OnceSaveData.WriteOnceSaveData);
         }
     }
 
@@ -157,45 +125,35 @@ internal record ManagedMod(
     private string OnceSaveDataPath(int slot) =>
         IO.Path.Combine(DataPaths.OnceSaveDataDir(slot), $"{Guid}.json.dat");
 
-    private void LoadUntypedData(string path, System.Type dataType, System.Action<object?> onLoad)
+    private void LoadStreamData(string path, System.Action<IO.Stream?> reader)
     {
         try
         {
-            var obj = Json.JsonUtil.Deserialize(path, dataType);
-            onLoad(obj);
-            DataManagerPlugin.InstanceLogger.LogInfo($"Loaded {dataType.Name} for mod {Guid}");
+            using var file = IO.File.OpenRead(path);
+            reader(file);
         }
         catch (System.Exception err)
             when (err is IO.FileNotFoundException or IO.DirectoryNotFoundException)
         {
-            onLoad(null);
+            reader(null);
         }
         catch (System.Exception err)
         {
-            onLoad(null);
-            DataManagerPlugin.InstanceLogger.LogError(
-                $"Error loading {dataType.Name} for mod {Guid}: {err}"
-            );
+            reader(null);
+            DataManagerPlugin.InstanceLogger.LogError($"Error loading data for mod {Guid}: {err}");
         }
     }
 
-    private void SaveUntypedData(string path, System.Type dataType, object? untypedData)
+    private void SaveStreamData(string path, System.Action<IO.Stream> writer)
     {
-        if (untypedData is null)
-        {
-            return;
-        }
-
         try
         {
-            Json.JsonUtil.Serialize(path, untypedData);
-            DataManagerPlugin.InstanceLogger.LogInfo($"Saved {dataType.Name} for mod {Guid}");
+            using var file = IO.File.Create(path);
+            writer(file);
         }
         catch (System.Exception err)
         {
-            DataManagerPlugin.InstanceLogger.LogError(
-                $"Error saving {dataType.Name} for mod {Guid}: {err}"
-            );
+            DataManagerPlugin.InstanceLogger.LogError($"Error saving data for mod {Guid}: {err}");
         }
     }
 }
