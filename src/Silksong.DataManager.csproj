@@ -3,7 +3,7 @@
   Imports silksong path properties only if present in order to allow CI builds. The file should be gitignored.
   If you are checking out from git and need to create a new one, you can use `dotnet new silksongpath` to generate one.
   -->
-  <Import Condition="Exists('SilksongPath.props')" Project="SilksongPath.props" />
+  <Import Condition="Exists('../SilksongPath.props')" Project="../SilksongPath.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
@@ -43,9 +43,9 @@
     <PackageReference Include="CSharpier.MsBuild" Version="1.1.2" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Remove="thunderstore/tmp;thunderstore/dist" />
-    <None Include="README.md" Pack="True" PackagePath="README.md" />
-    <None Include="thunderstore/icon.png" Pack="True" PackagePath="icon.png" />
+    <Folder Remove="../thunderstore/tmp;../thunderstore/dist" />
+    <None Include="../README.md" Pack="True" PackagePath="README.md" />
+    <None Include="../thunderstore/icon.png" Pack="True" PackagePath="icon.png" />
   </ItemGroup>
   <Target Name="CopyAndPackageMod" AfterTargets="PostBuildEvent">
     <ItemGroup>
@@ -55,7 +55,7 @@
       <Binaries Include="languages/*.json" LocalDir="languages" PackDir="plugins/languages" />
     </ItemGroup>
     <PropertyGroup>
-      <ThunderstoreDir>$(ProjectDir)/thunderstore</ThunderstoreDir>
+      <ThunderstoreDir>$(ProjectDir)/../thunderstore</ThunderstoreDir>
     </PropertyGroup>
     <Copy
       SourceFiles="@(Binaries)"
@@ -85,7 +85,7 @@
       Command="dotnet husky install"
       StandardOutputImportance="Low"
       StandardErrorImportance="High"
-      WorkingDirectory="."
+      WorkingDirectory="../."
     />
   </Target>
 </Project>
