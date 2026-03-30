@@ -14,8 +14,7 @@ used by DataManager can all be found in the `DataPaths` class.
 ## Global data
 
 Global data is available for cases where data is needed across multiple saves, or outside of saves such as in the menu.
-DataManager offers 2 types of global data which mod developers can choose between based on their use case. Save data
-is automatically sychronized across devices by Steam Cloud.
+DataManager offers 2 types of global data which mod developers can choose between based on their use case.
 
 ### `IProfileDataMod`
 
