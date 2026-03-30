@@ -1,5 +1,7 @@
 # DataManager
 
+[![NuGet Version](https://img.shields.io/nuget/v/Silksong.DataManager)](https://www.nuget.org/packages/Silksong.DataManager)
+
 DataManager is a mod that saves and loads data - global as well as save slot-specific -
 on behalf of other mods.
 
