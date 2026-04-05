@@ -52,10 +52,17 @@ internal static class SaveDataLoadHook
     nameof(GameManager.SaveGame),
     [typeof(int), typeof(System.Action<bool>), typeof(bool), typeof(AutoSaveName)]
 )]
+[HL.HarmonyPriority(2)]
 internal static class SaveDataSaveHook
 {
-    private static void Prefix(int saveSlot, ref System.Action<bool> ogCallback)
+    private static void Prefix(int saveSlot, ref System.Action<bool> ogCallback, bool __runOriginal)
     {
+        if (!__runOriginal)
+        {
+            // If saving has been disabled by another mod, we should disable saving modded data
+            return;
+        }
+
         if (saveSlot == 0)
         {
             return;
