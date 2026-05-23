@@ -24,8 +24,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          submodules: true
+
+      - name: Get template
+        run: |
+          mkdir docs/silksong-modding
+          gh api repos/silksong-modding/silksong-modding-style-docfx/tarball/dist >> template.tar.gz
+          tar -xzf template.tar.gz -C docs/silksong-modding --strip-components 1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
