@@ -3,6 +3,8 @@ name: Docs
 on:
   push:
     branches: [main]
+  repository_dispatch:
+    types: [template-updated]
 
 permissions:
   actions: read
