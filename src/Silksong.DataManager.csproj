@@ -26,7 +26,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageIcon>icon.png</PackageIcon>
     <NeutralLanguage>en</NeutralLanguage>
-    <RepositoryUrl>https://github.com/silksong-modding/Silksong.DataManager</RepositoryUrl>
+    <RepositoryUrl>https://git.silksong-modding.org/silksong-modding/Silksong.DataManager</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.0.8" PrivateAssets="all" />

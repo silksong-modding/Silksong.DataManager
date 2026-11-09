@@ -8,7 +8,7 @@ namespace = "silksong_modding"
 description = "DataManager is a mod that saves and loads data - global as well as save slot-specific - on behalf of other mods."
 
 # Replace this with a correct repo URL if the default is not accurate
-websiteUrl = "https://github.com/silksong-modding/Silksong.DataManager"
+websiteUrl = "https://git.silksong-modding.org/silksong-modding/Silksong.DataManager"
 containsNsfwContent = false
 
 
